@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Escaner Movil</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Mobile specific overrides */
+        body {
+            padding: 20px;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .mobile-card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            margin: 2rem 0;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: 1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+
+        .upload-btn:active {
+            transform: scale(0.95);
+        }
+
+        .status-msg {
+            margin-top: 1rem;
+            min-height: 1.5rem;
+            color: var(--text-muted);
+        }
+
+        .success-msg {
+            color: var(--success);
+        }
+
+        .error-msg {
+            color: var(--danger);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="mobile-card">
+        <div class="brand" style="justify-content: center; margin-bottom: 2rem;">
+            <i data-lucide="camera" size="32" color="var(--primary)"></i>
+            <h2>Tomar Foto</h2>
+        </div>
+
+        <p style="color: var(--text-muted);">Apunta a RUC, FECHA y EXPEDIENTE</p>
+
+        <div class="file-input-wrapper">
+            <!-- capture="environment" abre la cámara trasera directamente -->
+            <button class="upload-btn">
+                <i data-lucide="aperture"></i>
+                <span>ESCANEAR</span>
+                <div class="spinner" id="spinner"></div>
+            </button>
+            <input type="file" id="fileInput" accept="image/*" capture="environment">
+        </div>
+
+        <div id="status" class="status-msg">Listo</div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const fileInput = document.getElementById('fileInput');
+        const statusEl = document.getElementById('status');
+        const spinner = document.getElementById('spinner');
+
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // UI Loading
+            statusEl.textContent = "Procesando...";
+            statusEl.className = "status-msg";
+            spinner.style.display = "block";
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    statusEl.textContent = "¡Enviado! Mira tu PC.";
+                    statusEl.classList.add('success-msg');
+                    if (navigator.vibrate) navigator.vibrate(200);
+                } else {
+                    statusEl.textContent = "Error servidor: " + result.message;
+                    statusEl.classList.add('error-msg');
+                    alert("Error del servidor: " + result.message);
+                }
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = "Error de conexión";
+                statusEl.classList.add('error-msg');
+                alert("Error de conexión: No se pudo enviar la imagen.\n\nPosibles causas:\n1. WiFi diferente entre PC y Celular.\n2. Firewall de windows bloqueando.\n\nDetalle: " + err.message);
+            } finally {
+                spinner.style.display = "none";
+                // Reset value to allow same file scan if needed
+                fileInput.value = '';
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Info Area -->
+        <aside class="sidebar">
+            <div class="brand">
+                <i data-lucide="scan-line" class="logo-icon"></i>
+                <h1>Antigravity Scan</h1>
+            </div>
+
+            <div class="qr-section">
+                <div class="qr-card">
+                    <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code">
+                </div>
+                <p>Escanea con tu celular</p>
+                <small><a href="{{ mobile_url }}" target="_blank">{{ mobile_url }}</a></small>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="label">Escaneos</span>
+                    <strong id="scanCount" class="value">0</strong>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Estado</span>
+                    <strong class="value status-ok">En Línea</strong>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <header>
+                <h2>Datos Recibidos</h2>
+                <div class="actions">
+                    <button class="btn btn-secondary" onclick="downloadExcel()">
+                        <i data-lucide="file-spreadsheet"></i> Excel
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearTable()">
+                        <i data-lucide="trash-2"></i> Limpiar
+                    </button>
+                </div>
+            </header>
+
+            <div class="table-wrapper">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Hora</th>
+                            <th>Expediente</th>
+                            <th>Fecha</th>
+                            <th>RUC</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Rows injected here -->
+                    </tbody>
+                </table>
+                <div id="emptyState" class="empty-state">
+                    <i data-lucide="inbox" size="48"></i>
+                    <p>Esperando escaneos desde el móvil...</p>
+                </div>
+            </div>
+
+            <!-- DEBUG SECTION -->
+            <div style="margin-top: 2rem; background: var(--card-bg); padding: 1rem; border-radius: 8px;">
+                <h3 style="margin-top:0;">🔍 Depuración: Texto que lee el Robot</h3>
+                <p style="font-size: 0.9rem; color: var(--text-muted);">Aquí verás todo lo que la cámara logró leer. Si
+                    tus datos salen "No encontrado", revisa aquí cómo los está leyendo Tesseract.</p>
+                <textarea id="rawTextArea"
+                    style="width: 100%; height: 150px; background: #000; color: #0f0; font-family: monospace; padding: 10px; border: 1px solid #333;"
+                    placeholder="El texto crudo aparecerá aquí..."></textarea>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">Nuevo escaneo recibido</div>
+
+    <script>
+        lucide.createIcons();
+
+        const tableBody = document.getElementById('tableBody');
+        const emptyState = document.getElementById('emptyState');
+        const countEl = document.getElementById('scanCount');
+        let scanCounter = 0;
+        let socket;
+
+        function connectWebSocket() {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${wsProtocol}//${window.location.host}/ws/desktop`;
+
+            console.log("Conectando WS:", wsUrl);
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = function () {
+                console.log("WS Conectado");
+                // Reset status UI
+                const statusEl = document.querySelector('.value.status-err');
+                if (statusEl) {
+                    statusEl.textContent = 'En Línea';
+                    statusEl.classList.replace('status-err', 'status-ok');
+                }
+            };
+
+            socket.onmessage = function (event) {
+                const msg = JSON.parse(event.data);
+                if (msg.type === 'new_scan') {
+                    // Inject raw_text into data object for simpler handling
+                    const fullData = { ...msg.data, raw_text: msg.raw_text };
+                    addScan(fullData);
+                    showToast();
+                }
+            };
+
+            socket.onclose = function () {
+                console.log("WS Cerrado. Reintentando en 3s...");
+                const statusEl = document.querySelector('.value.status-ok');
+                if (statusEl) {
+                    statusEl.textContent = 'Desconectado';
+                    statusEl.classList.replace('status-ok', 'status-err');
+                }
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        // Init connection
+        connectWebSocket();
+
+        function addScan(data) {
+            emptyState.style.display = 'none';
+
+            const tr = document.createElement('tr');
+            tr.className = 'fade-in';
+
+            const time = new Date().toLocaleTimeString();
+
+            tr.innerHTML = `
+                <td>${time}</td>
+                <td><span class="badgexp">${data.expediente || '-'}</span></td>
+                <td>${data.fecha || '-'}</td>
+                <td><span class="ruc-tag">${data.ruc || '-'}</span></td>
+            `;
+
+            tableBody.insertBefore(tr, tableBody.firstChild);
+
+            scanCounter++;
+            countEl.textContent = scanCounter;
+
+            // Show Raw Text
+            const rawArea = document.getElementById('rawTextArea');
+            if (rawArea && data.raw_text) {
+                rawArea.value = "--- NUEVO ESCANEO ---\n" + data.raw_text;
+            } else if (rawArea) {
+                // Si el backend no mandó raw_text dentro de data (depende de cómo construí el objeto)
+                // En main.py el raw_text está fuera de 'data'.
+                // Corrijamos la recepción
+            }
+        }
+
+        function clearTable() {
+            tableBody.innerHTML = '';
+            emptyState.style.display = 'flex';
+            scanCounter = 0;
+            countEl.textContent = 0;
+            document.getElementById('rawTextArea').value = '';
+        }
+
+        function downloadExcel() {
+            const data = [];
+            const rows = document.querySelectorAll('#tableBody tr');
+
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('td');
+                if (cols.length > 0) {
+                    // Use innerText to get clean values
+                    // Col Index: 0=Hora, 1=Expediente, 2=Fecha, 3=RUC
+                    data.push({
+                        "Expediente": cols[1].innerText,
+                        "RUC": cols[3].innerText,
+                        "Fecha": cols[2].innerText
+                    });
+                }
+            });
+
+            if (data.length === 0) {
+                alert("No hay datos para exportar");
+                return;
+            }
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Escaneos");
+            XLSX.writeFile(wb, "Escaneos_" + new Date().toISOString().slice(0, 10) + ".xlsx");
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>

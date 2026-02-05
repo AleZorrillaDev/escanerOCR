@@ -1,0 +1,44 @@
+# Scanner Web con FastAPI y Python
+
+Esta aplicación permite usar tu celular para tomar fotos de expedientes y extraer automáticamente los campos:
+- Expediente
+- Fecha
+- RUC (11 dígitos)
+
+## Requisitos Previos
+
+1. **Python 3.8+** instalado.
+2. **Tesseract OCR (Windows)**:
+   - Descarga e instala Tesseract desde: https://github.com/UB-Mannheim/tesseract/wiki
+   - Asegúrate de instalarlo en la ruta por defecto: `C:\Program Files\Tesseract-OCR`
+   - Si lo instalas en otro lugar, deberás editar `main.py` para apuntar a la ruta correcta.
+
+## Instalación
+
+1. Abre una terminal (PowerShell o CMD) en esta carpeta.
+2. Instala las librerías necesarias:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## Cómo Iniciar
+
+1. Ejecuta el servidor:
+   ```bash
+   python main.py
+   ```
+2. Verás un mensaje indicando que el servidor está corriendo (ej. `http://192.168.1.5:8000`).
+3. El navegador se abrirá automáticamente (o ábrelo tú si no sucede).
+4. Verás un código QR en la pantalla de tu PC.
+
+## Uso
+
+1. **Escanea el QR** con la cámara de tu celular.
+2. Se abrirá la web app en tu móvil.
+3. Presiona el botón **ESCANEAR** o la cámara para tomar una foto del documento.
+4. Asegúrate de enfocar bien el texto.
+5. La foto se enviará a tu PC, se procesará y los datos aparecerán en la tabla de tu pantalla automáticamente.
+
+## Notas
+- Ambos dispositivos (PC y Celular) deben estar conectados a la misma red Wi-Fi.
+- Si Tesseract no está instalado, la imagen se subirá pero no se extraerá texto.
