@@ -1,8 +1,9 @@
-fastapi
-uvicorn
+Flask
+flask-sock
 python-multipart
 jinja2
 pillow
 pytesseract
 qrcode
-
+opencv-python
+numpy

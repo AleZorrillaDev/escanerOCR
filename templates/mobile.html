@@ -14,23 +14,26 @@
             padding: 20px;
             text-align: center;
             justify-content: center;
+            padding-bottom: 100px;
+            /* Space for fixed bottom bar if needed */
         }
 
         .mobile-card {
             background: var(--card-bg);
-            padding: 2rem;
+            padding: 1.5rem;
             border-radius: 1rem;
             border: 1px solid var(--border-color);
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
             width: 100%;
             max-width: 400px;
+            margin: 0 auto;
         }
 
         .file-input-wrapper {
             position: relative;
             overflow: hidden;
             display: inline-block;
-            margin: 2rem 0;
+            margin: 1.5rem 0;
             width: 100%;
         }
 
@@ -46,28 +49,97 @@
         }
 
         .upload-btn {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, var(--card-bg), #2a2a2a);
+            border: 2px dashed var(--primary);
+            color: var(--primary);
+            padding: 1rem;
             border-radius: 1rem;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            transition: transform 0.2s;
+            transition: all 0.2s;
             cursor: pointer;
+            width: 100%;
         }
 
         .upload-btn:active {
-            transform: scale(0.95);
+            transform: scale(0.98);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 1rem;
+        }
+
+        .gallery-item {
+            position: relative;
+            aspect-ratio: 1;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gallery-item .remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .process-actions {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: black;
+            font-weight: bold;
+            padding: 1rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .status-msg {
             margin-top: 1rem;
             min-height: 1.5rem;
             color: var(--text-muted);
+            font-size: 0.9rem;
         }
 
         .success-msg {
@@ -77,96 +149,174 @@
         .error-msg {
             color: var(--danger);
         }
-
-        /* Loading Spinner */
-        .spinner {
-            display: none;
-            width: 24px;
-            height: 24px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
     </style>
 </head>
 
 <body>
 
     <div class="mobile-card">
-        <div class="brand" style="justify-content: center; margin-bottom: 2rem;">
-            <i data-lucide="camera" size="32" color="var(--primary)"></i>
-            <h2>Tomar Foto</h2>
+        <div class="brand" style="justify-content: center; margin-bottom: 1.5rem;">
+            <i data-lucide="camera" size="28" color="var(--primary)"></i>
+            <h2>Escaner Móvil</h2>
         </div>
 
-        <p style="color: var(--text-muted);">Apunta a RUC, FECHA y EXPEDIENTE</p>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Toma fotos de <strong>todas las páginas</strong> del documento.
+        </p>
 
+        <!-- CAMERA BUTTON -->
         <div class="file-input-wrapper">
-            <!-- capture="environment" abre la cámara trasera directamente -->
             <button class="upload-btn">
-                <i data-lucide="aperture"></i>
-                <span>ESCANEAR</span>
-                <div class="spinner" id="spinner"></div>
+                <i data-lucide="plus-circle"></i>
+                <span>AGREGAR FOTO</span>
             </button>
+            <!-- capture="environment" for rear camera -->
             <input type="file" id="fileInput" accept="image/*" capture="environment">
         </div>
 
-        <div id="status" class="status-msg">Listo</div>
+        <!-- THUMBNAIL GALLERY -->
+        <div class="gallery-grid" id="gallery">
+            <!-- Items injected via JS -->
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="process-actions">
+            <button id="sendBtn" class="btn-primary" onclick="processQueue()" disabled>
+                <i data-lucide="send"></i>
+                ENVIAR A PC (<span id="countBadge">0</span>)
+            </button>
+
+            <button id="clearBtn" onclick="clearQueue()"
+                style="background:transparent; border:none; color:var(--text-muted); text-decoration:underline;">
+                Limpiar todo
+            </button>
+        </div>
+
+        <div id="status" class="status-msg">Esperando fotos...</div>
     </div>
 
     <script>
         lucide.createIcons();
 
         const fileInput = document.getElementById('fileInput');
+        const gallery = document.getElementById('gallery');
+        const sendBtn = document.getElementById('sendBtn');
+        const countBadge = document.getElementById('countBadge');
         const statusEl = document.getElementById('status');
-        const spinner = document.getElementById('spinner');
 
-        fileInput.addEventListener('change', async (e) => {
+        let fileQueue = [];
+
+        fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            // UI Loading
-            statusEl.textContent = "Procesando...";
-            statusEl.className = "status-msg";
-            spinner.style.display = "block";
+            // Add to queue
+            fileQueue.push(file);
+            updateUI();
 
-            const formData = new FormData();
-            formData.append('file', file);
+            // Create thumbnail
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const div = document.createElement('div');
+                div.className = 'gallery-item';
+                div.innerHTML = `
+                    <img src="${e.target.result}">
+                    <div class="remove-btn" onclick="removeFile(${fileQueue.length - 1})">x</div>
+                `;
+                gallery.appendChild(div);
+            };
+            reader.readAsDataURL(file);
 
-            try {
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    statusEl.textContent = "¡Enviado! Mira tu PC.";
-                    statusEl.classList.add('success-msg');
-                    if (navigator.vibrate) navigator.vibrate(200);
-                } else {
-                    statusEl.textContent = "Error servidor: " + result.message;
-                    statusEl.classList.add('error-msg');
-                    alert("Error del servidor: " + result.message);
-                }
-            } catch (err) {
-                console.error(err);
-                statusEl.textContent = "Error de conexión";
-                statusEl.classList.add('error-msg');
-                alert("Error de conexión: No se pudo enviar la imagen.\n\nPosibles causas:\n1. WiFi diferente entre PC y Celular.\n2. Firewall de windows bloqueando.\n\nDetalle: " + err.message);
-            } finally {
-                spinner.style.display = "none";
-                // Reset value to allow same file scan if needed
-                fileInput.value = '';
-            }
+            // Clear input so same file can be selected again if needed (though unlikely for camera)
+            fileInput.value = '';
         });
+
+        function removeFile(index) {
+            // Simplification: Just clearing matches user intent easier for MVP
+            // Implementing precise index removal with UI sync is complex in vanilla JS without re-rendering everything.
+            // Let's just re-render everything to be safe.
+            fileQueue.splice(index, 1);
+            renderGallery();
+        }
+
+        function renderGallery() {
+            gallery.innerHTML = '';
+            fileQueue.forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const div = document.createElement('div');
+                    div.className = 'gallery-item';
+                    div.innerHTML = `
+                        <img src="${e.target.result}">
+                        <div class="remove-btn" onclick="removeFile(${idx})">x</div>
+                    `;
+                    gallery.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+            updateUI();
+        }
+
+        function updateUI() {
+            countBadge.textContent = fileQueue.length;
+            sendBtn.disabled = fileQueue.length === 0;
+            if (fileQueue.length > 0) {
+                statusEl.textContent = "Listo para enviar.";
+                statusEl.className = "status-msg";
+            } else {
+                statusEl.textContent = "Esperando fotos...";
+            }
+        }
+
+        function clearQueue() {
+            fileQueue = [];
+            renderGallery();
+        }
+
+        async function processQueue() {
+            if (fileQueue.length === 0) return;
+
+            sendBtn.disabled = true;
+            statusEl.className = "status-msg";
+
+            let successCount = 0;
+            const total = fileQueue.length;
+
+            for (let i = 0; i < total; i++) {
+                const file = fileQueue[i];
+                statusEl.textContent = `Enviando página ${i + 1} de ${total}...`;
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        successCount++;
+                    } else {
+                        console.error("Error en archivo " + i, result);
+                    }
+                } catch (err) {
+                    console.error("Error de red", err);
+                }
+            }
+
+            if (successCount === total) {
+                statusEl.textContent = "¡Todo enviado correctamente!";
+                statusEl.classList.add('success-msg');
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                setTimeout(clearQueue, 2000);
+            } else {
+                statusEl.textContent = `Enviados ${successCount} de ${total}. Hubo errores.`;
+                statusEl.classList.add('error-msg');
+                sendBtn.disabled = false;
+            }
+        }
     </script>
 </body>
 

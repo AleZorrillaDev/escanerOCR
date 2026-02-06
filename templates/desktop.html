@@ -9,6 +9,111 @@
     <link rel="stylesheet" href="/static/styles.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <style>
+        /* Estilos para el Panel de Fusión */
+        .staging-area {
+            background: var(--card-bg);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .staging-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .staging-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .field-group label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .field-group input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            padding: 0.4rem;
+            border-radius: 6px;
+            color: var(--text-color);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .field-group input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .staging-actions {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .badge-count {
+            background: var(--primary);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+
+        /* Table scroll for many columns */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            min-width: 1200px;
+            /* Force scroll */
+        }
+
+        /* Robot Vision */
+        .robot-vision-container {
+            margin-top: 1rem;
+            text-align: center;
+            border: 1px dashed var(--border-color);
+            padding: 10px;
+            border-radius: 8px;
+            background: #000;
+        }
+
+        .robot-vision-container img {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+        }
+
+        .robot-label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--primary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
 </head>
 
 <body>
@@ -30,7 +135,7 @@
 
             <div class="stats">
                 <div class="stat-item">
-                    <span class="label">Escaneos</span>
+                    <span class="label">Escaneos en Tabla</span>
                     <strong id="scanCount" class="value">0</strong>
                 </div>
                 <div class="stat-item">
@@ -38,18 +143,66 @@
                     <strong class="value status-ok">En Línea</strong>
                 </div>
             </div>
+
+            <!-- ROBOT VISION PREVIEW -->
+            <div class="robot-vision-container">
+                <span class="robot-label">Visión del Robot (Última)</span>
+                <img id="robotView" src="" alt="Esperando imagen..." style="display:none;">
+                <p id="robotPlaceholder" style="color:#666; font-size:0.8rem;">Sin imagen reciente</p>
+            </div>
+
         </aside>
 
         <!-- Main Content -->
         <main class="content">
+
+            <!-- STAGING AREA / CONSOLA DE FUSIÓN -->
+            <section class="staging-area">
+                <div class="staging-header">
+                    <h2 style="font-size: 1.25rem; margin:0; display:flex; align-items:center;">
+                        <i data-lucide="layers" style="margin-right:8px;"></i> Documento Actual
+                        <span id="pageCountBadge" class="badge-count">Paginas: 0</span>
+                    </h2>
+                    <span style="font-size: 0.9rem; color: var(--text-muted);">
+                        Escanea varias páginas para completar los campos.
+                    </span>
+                </div>
+
+                <div class="staging-grid">
+                    <div class="field-group"><label>EXP SIGAD</label><input type="text" id="in_exp_sigad"></div>
+                    <div class="field-group"><label>FECHA REC.</label><input type="text" id="in_fecha_recepcion"></div>
+                    <div class="field-group"><label>RUC CONTRIB.</label><input type="text" id="in_ruc_contribuyente">
+                    </div>
+                    <div class="field-group"><label>CONTRIBUYENTE</label><input type="text"
+                            id="in_nombre_contribuyente"></div>
+                    <div class="field-group"><label>RES. COACTIVA</label><input type="text" id="in_res_coactiva"></div>
+                    <div class="field-group"><label>FECHA RC</label><input type="text" id="in_fecha_rc"></div>
+                    <div class="field-group"><label>EXPEDIENTE RC</label><input type="text" id="in_expediente_rc"></div>
+                    <div class="field-group"><label>MONTO</label><input type="text" id="in_monto"></div>
+                    <div class="field-group"><label>RUC TERCERO</label><input type="text" id="in_ruc_tercero"></div>
+                    <div class="field-group"><label>NOM. TERCERO</label><input type="text" id="in_nombre_tercero"></div>
+                    <div class="field-group"><label>CHEQUE/BOLETA</label><input type="text" id="in_cheque_boleta"></div>
+                </div>
+
+                <div class="staging-actions">
+                    <button class="btn btn-secondary" onclick="resetStaging()"
+                        style="background: var(--danger); border:none; opacity: 0.8;">
+                        <i data-lucide="x"></i> Descartar
+                    </button>
+                    <button class="btn btn-primary" onclick="commitToTable()">
+                        <i data-lucide="check-circle"></i> Terminar y Guardar
+                    </button>
+                </div>
+            </section>
+
             <header>
-                <h2>Datos Recibidos</h2>
+                <h2>Historial de Documentos</h2>
                 <div class="actions">
                     <button class="btn btn-secondary" onclick="downloadExcel()">
                         <i data-lucide="file-spreadsheet"></i> Excel
                     </button>
                     <button class="btn btn-secondary" onclick="clearTable()">
-                        <i data-lucide="trash-2"></i> Limpiar
+                        <i data-lucide="trash-2"></i> Limpiar Todo
                     </button>
                 </div>
             </header>
@@ -58,10 +211,18 @@
                 <table id="dataTable">
                     <thead>
                         <tr>
-                            <th>Hora</th>
-                            <th>Expediente</th>
-                            <th>Fecha</th>
+                            <th>#</th>
+                            <th>EXP SIGAD</th>
+                            <th>FECHA REC</th>
                             <th>RUC</th>
+                            <th>CONTRIBUYENTE</th>
+                            <th>RES. COAC.</th>
+                            <th>FECHA RC</th>
+                            <th>EXP. RC</th>
+                            <th>MONTO</th>
+                            <th>RUC TERC.</th>
+                            <th>NOM. TERC.</th>
+                            <th>CHEQUE</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
@@ -70,24 +231,22 @@
                 </table>
                 <div id="emptyState" class="empty-state">
                     <i data-lucide="inbox" size="48"></i>
-                    <p>Esperando escaneos desde el móvil...</p>
+                    <p>Los documentos guardados aparecerán aquí.</p>
                 </div>
             </div>
 
             <!-- DEBUG SECTION -->
             <div style="margin-top: 2rem; background: var(--card-bg); padding: 1rem; border-radius: 8px;">
-                <h3 style="margin-top:0;">🔍 Depuración: Texto que lee el Robot</h3>
-                <p style="font-size: 0.9rem; color: var(--text-muted);">Aquí verás todo lo que la cámara logró leer. Si
-                    tus datos salen "No encontrado", revisa aquí cómo los está leyendo Tesseract.</p>
+                <h3 style="margin-top:0;">🔍 Depuración: Último texto leído</h3>
                 <textarea id="rawTextArea"
-                    style="width: 100%; height: 150px; background: #000; color: #0f0; font-family: monospace; padding: 10px; border: 1px solid #333;"
+                    style="width: 100%; height: 100px; background: #000; color: #0f0; font-family: monospace; padding: 10px; border: 1px solid #333;"
                     placeholder="El texto crudo aparecerá aquí..."></textarea>
             </div>
         </main>
     </div>
 
     <!-- Notification Toast -->
-    <div id="toast" class="toast">Nuevo escaneo recibido</div>
+    <div id="toast" class="toast">¡Datos actualizados!</div>
 
     <script>
         lucide.createIcons();
@@ -95,8 +254,28 @@
         const tableBody = document.getElementById('tableBody');
         const emptyState = document.getElementById('emptyState');
         const countEl = document.getElementById('scanCount');
-        let scanCounter = 0;
+        const pageCountEl = document.getElementById('pageCountBadge');
+
+        // Robot Vision
+        const robotView = document.getElementById('robotView');
+        const robotPlaceholder = document.getElementById('robotPlaceholder');
+
+        let tableCounter = 0;
+        let currentPageCount = 0;
         let socket;
+
+        // Inputs
+        const keys = [
+            'exp_sigad', 'fecha_recepcion', 'ruc_contribuyente', 'nombre_contribuyente',
+            'res_coactiva', 'fecha_rc', 'expediente_rc', 'monto',
+            'ruc_tercero', 'nombre_tercero', 'cheque_boleta'
+        ];
+
+        function getInputs() {
+            let inputs = {};
+            keys.forEach(k => inputs[k] = document.getElementById('in_' + k));
+            return inputs;
+        }
 
         function connectWebSocket() {
             const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -107,7 +286,6 @@
 
             socket.onopen = function () {
                 console.log("WS Conectado");
-                // Reset status UI
                 const statusEl = document.querySelector('.value.status-err');
                 if (statusEl) {
                     statusEl.textContent = 'En Línea';
@@ -118,15 +296,26 @@
             socket.onmessage = function (event) {
                 const msg = JSON.parse(event.data);
                 if (msg.type === 'new_scan') {
-                    // Inject raw_text into data object for simpler handling
-                    const fullData = { ...msg.data, raw_text: msg.raw_text };
-                    addScan(fullData);
+                    mergeScanData(msg.data);
+
+                    const rawArea = document.getElementById('rawTextArea');
+                    if (rawArea && msg.raw_text) {
+                        rawArea.value = `--- PÁGINA ${currentPageCount} ---\n` + msg.raw_text;
+                    }
+
+                    // Show Robot Vision
+                    if (msg.processed_image) {
+                        robotView.src = "data:image/jpeg;base64," + msg.processed_image;
+                        robotView.style.display = "inline-block";
+                        robotPlaceholder.style.display = "none";
+                    }
+
                     showToast();
                 }
             };
 
             socket.onclose = function () {
-                console.log("WS Cerrado. Reintentando en 3s...");
+                console.log("WS Cerrado. Reintentando...");
                 const statusEl = document.querySelector('.value.status-ok');
                 if (statusEl) {
                     statusEl.textContent = 'Desconectado';
@@ -136,46 +325,80 @@
             };
         }
 
-        // Init connection
         connectWebSocket();
 
-        function addScan(data) {
+        function mergeScanData(newData) {
+            currentPageCount++;
+            pageCountEl.textContent = `Páginas: ${currentPageCount}`;
+
+            const inputs = getInputs();
+            for (const key of keys) {
+                const incomingVal = newData[key];
+                if (incomingVal && incomingVal.trim() !== "") {
+                    inputs[key].value = incomingVal;
+                    inputs[key].style.borderColor = "var(--success)";
+                    setTimeout(() => inputs[key].style.borderColor = "var(--border-color)", 1000);
+                }
+            }
+        }
+
+        function commitToTable() {
+            if (currentPageCount === 0) {
+                alert("Primero escanea al menos una página.");
+                return;
+            }
+
+            const inputs = getInputs();
+            let finalData = {};
+            keys.forEach(k => finalData[k] = inputs[k].value);
+
+            addScanRow(finalData);
+            resetStaging();
+        }
+
+        function resetStaging() {
+            currentPageCount = 0;
+            pageCountEl.textContent = "Páginas: 0";
+            const inputs = getInputs();
+            keys.forEach(k => inputs[k].value = "");
+            document.getElementById('rawTextArea').value = "";
+
+            // Reset Robot View
+            robotView.style.display = "none";
+            robotPlaceholder.style.display = "block";
+        }
+
+        function addScanRow(data) {
             emptyState.style.display = 'none';
+            tableCounter++;
+            countEl.textContent = tableCounter;
 
             const tr = document.createElement('tr');
             tr.className = 'fade-in';
 
-            const time = new Date().toLocaleTimeString();
-
             tr.innerHTML = `
-                <td>${time}</td>
-                <td><span class="badgexp">${data.expediente || '-'}</span></td>
-                <td>${data.fecha || '-'}</td>
-                <td><span class="ruc-tag">${data.ruc || '-'}</span></td>
+                <td>${tableCounter}</td>
+                <td>${data.exp_sigad || '-'}</td>
+                <td>${data.fecha_recepcion || '-'}</td>
+                <td>${data.ruc_contribuyente || '-'}</td>
+                <td>${data.nombre_contribuyente || '-'}</td>
+                <td>${data.res_coactiva || '-'}</td>
+                <td>${data.fecha_rc || '-'}</td>
+                <td>${data.expediente_rc || '-'}</td>
+                <td>${data.monto || '-'}</td>
+                <td>${data.ruc_tercero || '-'}</td>
+                <td>${data.nombre_tercero || '-'}</td>
+                <td>${data.cheque_boleta || '-'}</td>
             `;
-
             tableBody.insertBefore(tr, tableBody.firstChild);
-
-            scanCounter++;
-            countEl.textContent = scanCounter;
-
-            // Show Raw Text
-            const rawArea = document.getElementById('rawTextArea');
-            if (rawArea && data.raw_text) {
-                rawArea.value = "--- NUEVO ESCANEO ---\n" + data.raw_text;
-            } else if (rawArea) {
-                // Si el backend no mandó raw_text dentro de data (depende de cómo construí el objeto)
-                // En main.py el raw_text está fuera de 'data'.
-                // Corrijamos la recepción
-            }
         }
 
         function clearTable() {
+            if (!confirm("¿Borrar todo el historial?")) return;
             tableBody.innerHTML = '';
             emptyState.style.display = 'flex';
-            scanCounter = 0;
+            tableCounter = 0;
             countEl.textContent = 0;
-            document.getElementById('rawTextArea').value = '';
         }
 
         function downloadExcel() {
@@ -185,12 +408,19 @@
             rows.forEach(row => {
                 const cols = row.querySelectorAll('td');
                 if (cols.length > 0) {
-                    // Use innerText to get clean values
-                    // Col Index: 0=Hora, 1=Expediente, 2=Fecha, 3=RUC
                     data.push({
-                        "Expediente": cols[1].innerText,
-                        "RUC": cols[3].innerText,
-                        "Fecha": cols[2].innerText
+                        "ID": cols[0].innerText,
+                        "EXP SIGAD": cols[1].innerText,
+                        "FECHA REC": cols[2].innerText,
+                        "RUC CONTRIB.": cols[3].innerText,
+                        "NOMBRE CONTRIB.": cols[4].innerText,
+                        "RES. COAC.": cols[5].innerText,
+                        "FECHA RC": cols[6].innerText,
+                        "EXP. RC": cols[7].innerText,
+                        "MONTO": cols[8].innerText,
+                        "RUC TERCERO": cols[9].innerText,
+                        "NOM TERCERO": cols[10].innerText,
+                        "CHEQUE/BOL": cols[11].innerText
                     });
                 }
             });
@@ -202,7 +432,7 @@
 
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Escaneos");
+            XLSX.utils.book_append_sheet(wb, ws, "Historial");
             XLSX.writeFile(wb, "Escaneos_" + new Date().toISOString().slice(0, 10) + ".xlsx");
         }
 
@@ -213,4 +443,5 @@
         }
     </script>
 </body>
+
 </html>
