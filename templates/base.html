@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}ScanDoc{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Base Styles -->
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #d8e3f0;
+        color: #333;
+        min-height: 100vh;
+      }
+
+      .module-header {
+        background: linear-gradient(135deg, #0066b3 0%, #004d87 100%);
+        color: white;
+        padding: 15px 40px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .module-header-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 18px;
+      }
+
+      .module-name {
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+
+      .separator {
+        opacity: 0.5;
+      }
+
+      .module-desc {
+        font-weight: 300;
+        opacity: 0.9;
+      }
+    </style>
+
+    {% block head_extra %}{% endblock %}
+  </head>
+  <body>
+    <!-- Module Header -->
+    <div class="module-header">
+      {% block module_title %}
+      <div class="module-header-title">
+        <span class="module-name">ScanDoc</span>
+        <span class="separator">|</span>
+        <span class="module-desc">Sistema de Digitalización</span>
+      </div>
+      {% endblock %}
+    </div>
+
+    <!-- Main Content -->
+    {% block content %}{% endblock %}
+
+    <!-- Scripts -->
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

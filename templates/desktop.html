@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scanner Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/styles.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -89,66 +89,83 @@
             /* Force scroll */
         }
 
-        /* Robot Vision */
-        .robot-vision-container {
-            margin-top: 1rem;
-            text-align: center;
-            border: 1px dashed var(--border-color);
-            padding: 10px;
-            border-radius: 8px;
-            background: #000;
-        }
-
-        .robot-vision-container img {
-            max-width: 100%;
-            max-height: 200px;
-            object-fit: contain;
-        }
-
-        .robot-label {
-            display: block;
-            margin-bottom: 5px;
-            color: var(--primary);
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        /* Inline styles removed - using external CSS from styles.css */
     </style>
 </head>
 
 <body>
     <div class="app-container">
-        <!-- Sidebar / Info Area -->
-        <aside class="sidebar">
-            <div class="brand">
-                <i data-lucide="scan-line" class="logo-icon"></i>
-                <h1>Antigravity Scan</h1>
-            </div>
+        <!-- HEADER PROFESIONAL -->
+        <header class="main-header">
+            <div class="header-content">
+                <div class="brand-area">
+                    <!-- Flecha retorno inicio -->
+                    <a href="/" style="margin-right: 15px; color: #555; font-size: 20px; display: flex; align-items: center; text-decoration: none;" title="Volver al Inicio">
+                        <i data-lucide="arrow-left"></i>
+                    </a>
 
-            <div class="qr-section">
-                <div class="qr-card">
-                    <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code">
-                </div>
-                <p>Escanea con tu celular</p>
-                <small><a href="{{ mobile_url }}" target="_blank">{{ mobile_url }}</a></small>
-            </div>
+                    <a href="/" style="text-decoration: none; display: flex; align-items: center;">
+                        <i data-lucide="scan-line" style="width: 42px; height: 42px; color: #0163ac;"></i>
+                    </a>
 
-            <div class="stats">
-                <div class="stat-item">
-                    <span class="label">Escaneos en Tabla</span>
-                    <strong id="scanCount" class="value">0</strong>
+                    <!-- Título del módulo -->
+                    <div class="module-header-title">
+                        <span class="module-name">ScanDoc</span>
+                        <span class="separator">|</span>
+                        <span class="module-desc">Digitalización Inteligente OCR</span>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <span class="label">Estado</span>
-                    <strong class="value status-ok">En Línea</strong>
+
+                <div class="user-area">
+                    <div class="user-details">
+                        <span class="user-name">Usuario Demo</span>
+                        <span class="user-role">Administrador</span>
+                    </div>
+
+                    <!-- Avatar con dropdown -->
+                    <div class="user-avatar" onclick="toggleProfileDropdown()">
+                        <i data-lucide="user"></i>
+                    </div>
+
+                    <!-- Dropdown Content -->
+                    <div id="profileDropdown" class="dropdown-menu">
+                        <a href="#" class="dropdown-item"><i data-lucide="user-cog"></i> Mi Perfil</a>
+                        <a href="#" class="dropdown-item"><i data-lucide="settings"></i> Ajustes</a>
+                        <a href="#" class="dropdown-item" style="color: var(--accent-red);"><i data-lucide="log-out"></i> Cerrar Sesión</a>
+                    </div>
                 </div>
             </div>
+        </header>
 
-            <!-- ROBOT VISION PREVIEW -->
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="content">
+            <div style="display: grid; grid-template-columns: 320px 1fr; gap: 24px;">
+                <!-- Sidebar / Info Area -->
+                <aside class="sidebar">
+                    <div class="qr-section">
+                        <div class="qr-card">
+                            <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code">
+                        </div>
+                        <p>Escanea con tu celular</p>
+                        <small><a href="{{ mobile_url }}" target="_blank">{{ mobile_url }}</a></small>
+                    </div>
+
+                    <div class="stats">
+                        <div class="stat-item">
+                            <span class="label">Escaneos en Tabla</span>
+                            <strong id="scanCount" class="value">0</strong>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">Estado</span>
+                            <strong class="value status-ok">En Línea</strong>
+                        </div>
+                    </div>
+
+                    <!-- ROBOT VISION PREVIEW -->
             <div class="robot-vision-container">
                 <span class="robot-label">Visión del Robot (Última)</span>
                 <img id="robotView" src="" alt="Esperando imagen..." style="display:none;">
-                <p id="robotPlaceholder" style="color:#666; font-size:0.8rem;">Sin imagen reciente</p>
+                <p id="robotPlaceholder" style="color:#64748b; font-size:0.8rem; margin: 20px 0;">Sin imagen reciente</p>
             </div>
 
         </aside>
@@ -236,19 +253,36 @@
             </div>
 
             <!-- DEBUG SECTION -->
-            <div style="margin-top: 2rem; background: var(--card-bg); padding: 1rem; border-radius: 8px;">
-                <h3 style="margin-top:0;">🔍 Depuración: Último texto leído</h3>
+            </div>
+            <!-- Debug Section -->
+            <div style="margin-top: 2rem; background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <h3 style="margin-top:0; color: #0163ac; font-size: 16px;">Depuración: Último texto leído</h3>
                 <textarea id="rawTextArea"
-                    style="width: 100%; height: 100px; background: #000; color: #0f0; font-family: monospace; padding: 10px; border: 1px solid #333;"
+                    style="width: 100%; height: 100px; background: #f8fafc; color: #333; font-family: monospace; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px;"
                     placeholder="El texto crudo aparecerá aquí..."></textarea>
             </div>
-        </main>
+        </div>
+        </div>
     </div>
 
     <!-- Notification Toast -->
     <div id="toast" class="toast">¡Datos actualizados!</div>
 
     <script>
+        // Dropdown toggle
+        function toggleProfileDropdown() {
+            const dd = document.getElementById('profileDropdown');
+            dd.classList.toggle('show');
+        }
+
+        // Cerrar al hacer click fuera
+        window.addEventListener('click', function (e) {
+            if (!e.target.closest('.user-avatar') && !e.target.closest('.dropdown-menu')) {
+                document.getElementById('profileDropdown').classList.remove('show');
+            }
+        });
+
+        // Initialize Lucide icons
         lucide.createIcons();
 
         const tableBody = document.getElementById('tableBody');

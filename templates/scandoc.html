@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Doc - Digitalización{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="/static/css/scandoc.css" />
+<script src="https://unpkg.com/lucide@latest"></script>
+{% endblock %}
+
+{% block module_title %}
+<div class="module-header-title">
+    <span class="module-name">ScanDoc</span>
+    <span class="separator">|</span>
+    <span class="module-desc">Digitalización Inteligente</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="scandoc-wrapper">
+    <!-- Toolbar -->
+    <div class="scandoc-toolbar">
+        <div class="header-left">
+            <h1>Digitalización de Documentos</h1>
+            <p>Escanea, clasifica y archiva tus expedientes automáticamente</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-primary" onclick="triggerScan()">
+                <i data-lucide="scan-line"></i> Nuevo Escaneo
+            </button>
+            <button class="btn btn-accent" onclick="document.getElementById('file-upload').click()">
+                <i data-lucide="upload-cloud"></i> Subir Archivo
+                <input type="file" id="file-upload" hidden accept=".pdf,.jpg,.png" onchange="handleFile(event)">
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="scan-container">
+        <!-- Sidebar List -->
+        <div class="doc-list-sidebar">
+            <div class="doc-list-header">
+                <span>Recientes</span>
+                <i data-lucide="history" width="16"></i>
+            </div>
+            
+            <div class="form-group">
+                <div class="entry-box">
+                    <div class="entry-label">BUSCAR</div>
+                    <input type="text" class="entry-input" placeholder="Filtrar...">
+                </div>
+            </div>
+
+            <div class="doc-items" id="doc-list">
+                <!-- Items injected by JS -->
+                <div class="doc-item active">
+                    <div class="doc-title">Expediente_001.pdf</div>
+                    <div class="doc-meta">Hace 5 min • 2.4 MB</div>
+                </div>
+                <div class="doc-item">
+                    <div class="doc-title">Factura_B001-23.jpg</div>
+                    <div class="doc-meta">Hace 1 hora • 450 KB</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Viewer / Dropzone -->
+        <div class="scan-viewer" id="viewer-area">
+            <div class="scan-placeholder">
+                <i data-lucide="scan"></i>
+                <h3>Área de Visualización</h3>
+                <p>Selecciona un documento o inicia un escaneo para ver el contenido.</p>
+                <button class="btn btn-primary" style="margin-top: 20px;" onclick="triggerScan()">
+                    Iniciar Escaner
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+    });
+
+    function triggerScan() {
+        // En una app real, esto conectaría con TWAIN/WIA o API de escáner
+        const viewer = document.getElementById('viewer-area');
+        viewer.innerHTML = `
+            <div style="text-align:center; color: #0066b3;">
+                <i data-lucide="loader-2" class="spin" width="48" height="48"></i>
+                <h3 style="margin-top:15px">Escaneando...</h3>
+                <p>Por favor espere mientras se procesa el documento.</p>
+            </div>
+        `;
+        lucide.createIcons();
+
+        setTimeout(() => {
+            viewer.innerHTML = `
+                <div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <div style="background:#f0f0f0; width:80%; height:80%; border:1px solid #ddd; display:flex; align-items:center; justify-content:center;">
+                        [VISTA PREVIA DEL DOCUMENTO]
+                    </div>
+                    <div style="margin-top:20px; display:flex; gap:10px;">
+                        <button class="btn btn-success"><i data-lucide="check"></i> Guardar</button>
+                        <button class="btn btn-danger" onclick="location.reload()"><i data-lucide="trash"></i> Descartar</button>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+            
+            // Add to list mock
+            const list = document.getElementById('doc-list');
+            const newItem = document.createElement('div');
+            newItem.className = 'doc-item active';
+            newItem.innerHTML = `
+                <div class="doc-title">Nuevo_Escaneo_${Math.floor(Math.random()*1000)}.pdf</div>
+                <div class="doc-meta">Ahora • Pendiente</div>
+            `;
+            list.prepend(newItem);
+            
+        }, 2000);
+    }
+
+    function handleFile(e) {
+        if(e.target.files.length > 0) {
+            alert("Archivo seleccionado: " + e.target.files[0].name);
+            triggerScan(); // Mock process
+        }
+    }
+    
+    // Simple spinner css
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}

@@ -1,0 +1,265 @@
+/* --- SCANDOC MODULE CSS (Based on AutoDoc/BPSearch Design) --- */
+
+:root {
+  --primary-blue: #0066b3;
+  --primary-hover: #005494;
+  --accent-pink: #a91e5c;
+  --bg-page: #d8e3f0;
+  --card-bg: #ffffff;
+  --text-main: #333333;
+  --text-muted: #666666;
+  --border-light: #e0e0e0;
+  --radius-pill: 100px;
+  --radius-card: 20px;
+  --font-family: "Poppins", sans-serif;
+}
+
+.scandoc-wrapper {
+  font-family: var(--font-family);
+  background-color: var(--bg-page);
+  min-height: calc(100vh - 70px);
+  padding: 25px 40px;
+  color: var(--text-main);
+}
+
+.scandoc-wrapper * {
+  box-sizing: border-box;
+}
+
+/* Toolbar */
+.scandoc-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.header-left h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary-blue);
+  margin: 0;
+}
+
+.header-left p {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 15px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 24px;
+  border-radius: var(--radius-pill);
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: white;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary {
+  background-color: var(--primary-blue);
+}
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn-accent {
+  background-color: var(--accent-pink);
+}
+.btn-accent:hover {
+  background-color: #8a1849;
+}
+
+.btn-success {
+  background-color: #10b981;
+}
+.btn-success:hover {
+  background-color: #059669;
+}
+
+.btn-danger {
+  background-color: #ef4444;
+}
+.btn-danger:hover {
+  background-color: #dc2626;
+}
+
+/* Main Scan Area */
+.scan-container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+  height: calc(100vh - 200px);
+}
+
+/* Sidebar / History */
+.doc-list-sidebar {
+  background: white;
+  border-radius: var(--radius-card);
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.doc-list-header {
+  font-weight: 700;
+  color: var(--primary-blue);
+  margin-bottom: 15px;
+  font-size: 16px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.doc-items {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.doc-item {
+  padding: 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: 1px solid transparent;
+}
+
+.doc-item:hover {
+  background: #eef6fc;
+}
+
+.doc-item.active {
+  background: #eef6fc;
+  border-color: var(--primary-blue);
+}
+
+.doc-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: #333;
+}
+.doc-meta {
+  font-size: 11px;
+  color: #999;
+  margin-top: 4px;
+}
+
+/* Viewer Area */
+.scan-viewer {
+  background: white;
+  border-radius: var(--radius-card);
+  padding: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border: 2px dashed var(--border-light);
+}
+
+.scan-placeholder {
+  text-align: center;
+  color: #999;
+}
+
+.scan-placeholder i {
+  font-size: 64px;
+  color: #ccdbe8;
+  margin-bottom: 20px;
+}
+
+.scan-placeholder h3 {
+  margin: 0 0 10px;
+  color: var(--primary-blue);
+}
+
+/* Inputs (Entry Box Style) */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.entry-box {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border-radius: var(--radius-pill);
+  height: 48px;
+  padding: 4px;
+  border: 1px solid var(--border-light);
+  width: 100%;
+}
+
+.entry-label {
+  background-color: var(--primary-blue);
+  color: white;
+  border-radius: var(--radius-pill);
+  padding: 0 15px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  min-width: 100px;
+  justify-content: center;
+}
+
+.entry-input {
+  border: none;
+  flex: 1;
+  height: 100%;
+  padding: 0 15px;
+  font-family: var(--font-family);
+  outline: none;
+  color: var(--text-main);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .scan-container {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .doc-list-sidebar {
+    max-height: 300px;
+  }
+
+  .scandoc-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

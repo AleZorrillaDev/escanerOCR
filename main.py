@@ -264,6 +264,11 @@ def index():
 def mobile():
     return render_template("mobile.html")
 
+@app.route("/scandoc", methods=["GET"])
+def scandoc():
+    return render_template("scandoc.html")
+
+
 @sock.route('/ws/desktop')
 def desktop_sock(ws):
     ws_manager.register(ws)
